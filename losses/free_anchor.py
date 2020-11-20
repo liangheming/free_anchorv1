@@ -1,6 +1,7 @@
 import torch
 from utils.boxs_utils import box_iou
 from losses.commons import smooth_l1_loss, mean_max
+from utils.model_utils import reduce_sum
 
 
 def negative_focal_loss(logits, gamma):
@@ -129,12 +130,16 @@ class FreeAnchorLoss(object):
         match_reg_target = self.box_coder.encoder(match_anchors, match_gt_box)
         box_loss = smooth_l1_loss(match_reg_predicts, match_reg_target, beta=self.beta).sum(-1)
         box_prob = (-self.reg_weight * box_loss).exp()
-        positive_losses = mean_max(cls_prob * box_prob).sum() / gt_num
+        positive_losses = mean_max(cls_prob * box_prob).sum()
 
         all_cls_prob = cls_predicts[batch_idx].view(-1, cls_num)
         all_cls_target = torch.cat(batch_cls_target)
-        negative_loss = negative_focal_loss(all_cls_prob * (1 - all_cls_target), self.gamma).sum() / (
-                gt_num * self.top_k)
+        negative_loss = negative_focal_loss(all_cls_prob * (1 - all_cls_target), self.gamma).sum()
 
+        positive_losses = reduce_sum(positive_losses, clone=False)
+        negative_loss = reduce_sum(negative_loss, clone=False)
+        gt_num = reduce_sum(torch.tensor(gt_num, device=device)).item()
+        positive_losses = positive_losses / gt_num
+        negative_loss = negative_loss / (gt_num * self.top_k)
         # print(positive_losses * self.alpha, negative_loss * (1 - self.alpha))
         return positive_losses * self.alpha, negative_loss * (1 - self.alpha)

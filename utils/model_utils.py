@@ -83,9 +83,10 @@ class ModelEMA:
         copy_attr(self.ema, model, include, exclude)
 
 
-def reduce_sum(tensor):
+def reduce_sum(tensor,clone=True):
     import torch.distributed as dist
-    tensor = tensor.clone()
+    if clone:
+        tensor = tensor.clone()
     dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
     return tensor
 
