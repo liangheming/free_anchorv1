@@ -247,6 +247,7 @@ default_cfg = {
     "alpha": 0.5,
     "gamma": 2.0,
     "beta": 1. / 9,
+    "dist_train": False,
     # predicts
     "conf_thresh": 0.01,
     "nms_iou_thresh": 0.5,
@@ -278,7 +279,8 @@ class RetinaNet(nn.Module):
             gamma=self.cfg['gamma'],
             iou_thresh=self.cfg['iou_thresh'],
             reg_weight=self.cfg['reg_weight'],
-            beta=self.cfg['beta']
+            beta=self.cfg['beta'],
+            dist_train=self.cfg['dist_train']
         )
 
     def forward(self, x, targets=None):

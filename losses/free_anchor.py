@@ -60,7 +60,8 @@ class FreeAnchorLoss(object):
                  top_k=64,
                  iou_thresh=0.6,
                  reg_weight=0.75,
-                 beta=1. / 9):
+                 beta=1. / 9,
+                 dist_train=True):
         super(FreeAnchorLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
@@ -68,6 +69,7 @@ class FreeAnchorLoss(object):
         self.iou_thresh = iou_thresh
         self.reg_weight = reg_weight
         self.beta = beta
+        self.dist_train = dist_train
         self.box_coder = BoxCoder()
 
     def __call__(self, cls_predicts, reg_predicts, anchors, targets):
@@ -135,10 +137,10 @@ class FreeAnchorLoss(object):
         all_cls_prob = cls_predicts[batch_idx].view(-1, cls_num)
         all_cls_target = torch.cat(batch_cls_target)
         negative_loss = negative_focal_loss(all_cls_prob * (1 - all_cls_target), self.gamma).sum()
-
-        positive_losses = reduce_sum(positive_losses, clone=False)
-        negative_loss = reduce_sum(negative_loss, clone=False)
-        gt_num = reduce_sum(torch.tensor(gt_num, device=device)).item()
+        if self.dist_train:
+            positive_losses = reduce_sum(positive_losses, clone=False)
+            negative_loss = reduce_sum(negative_loss, clone=False)
+            gt_num = reduce_sum(torch.tensor(gt_num, device=device)).item()
         positive_losses = positive_losses / gt_num
         negative_loss = negative_loss / (gt_num * self.top_k)
         # print(positive_losses * self.alpha, negative_loss * (1 - self.alpha))

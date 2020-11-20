@@ -26,6 +26,7 @@ model:
   beta: 0.11
   reg_weight: 0.75
   block_type: CGR
+  dist_train: True
   conf_thresh: 0.05
   nms_iou_thresh: 0.5
   max_det: 300
