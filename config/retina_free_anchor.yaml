@@ -1,4 +1,4 @@
-model_name: retinanet
+model_name: free_anchor
 data:
   train_annotation_path: /home/huffman/data/annotations/instances_train2017.json
 #  train_annotation_path: /home/huffman/data/annotations/instances_val2017.json
@@ -26,7 +26,7 @@ model:
   beta: 0.11
   reg_weight: 0.75
   block_type: CGR
-  dist_train: True
+  dist_train: False
   conf_thresh: 0.05
   nms_iou_thresh: 0.5
   max_det: 300
